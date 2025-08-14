@@ -70,7 +70,7 @@ export const stripeWebhooks = async (request, response) => {
 
   try {
     switch (event.type) {
-      case "checkout.session.completed": {
+      case "payment_intent.succeeded": {
         console.log("💰 Checkout session completed triggered");
         const session = event.data.object;
         console.log("📦 Session object:", session);
