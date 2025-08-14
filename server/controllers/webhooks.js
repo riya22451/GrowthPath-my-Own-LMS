@@ -15,7 +15,7 @@ export const clerkWebHooks=async(req,res)=>{
                 _id:data.id,
                 email:data.email_addresses[0].email_address,
                 name:data.first_name+" "+data.last_name,
-                imageUrl:data.iamge_url,
+                imageUrl:data.image_url,
             }
             await User.create(userData)
             res.json({})
@@ -26,7 +26,7 @@ export const clerkWebHooks=async(req,res)=>{
                 
                 email:data.email_addresses[0].email_address,
                 name:data.first_name+" "+data.last_name,
-                imageUrl:data.iamge_url,
+                imageUrl:data.image_url,
             }
             await User.findByIdAndUpdate(data.id,userData)
             res.json({})
