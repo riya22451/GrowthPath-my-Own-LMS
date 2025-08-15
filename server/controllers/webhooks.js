@@ -1,7 +1,7 @@
 import {Webhook} from "svix"
 import User from "../models/user.js"
 import Stripe from "stripe"
-import { Purchase } from "../models/purchase.js"
+import  {Purchase}  from "../models/purchase.js"
 import Course from "../models/course.js"
 export const clerkWebHooks=async(req,res)=>{
   try {
@@ -57,7 +57,7 @@ export const stripeWebhooks = async (request, response) => {
 
   let event;
   try {
-    event = stripeInstance.webhooks.constructEvent(
+    event = Stripe.webhooks.constructEvent(
       request.body, // raw buffer required
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
@@ -72,12 +72,14 @@ export const stripeWebhooks = async (request, response) => {
     switch (event.type) {
       case "payment_intent.succeeded": {
         console.log("💰 Checkout session completed triggered");
-        const session = event.data.object;
+        const paymentIntent = event.data.object;
         console.log("📦 Session object:", session);
 
-        const purchaseId = session.metadata?.purchaseId;
-        console.log("🆔 Purchase ID from metadata:", purchaseId);
-
+        const paymentIntentId = paymentIntent.id;
+        const session=await stripeInstance.checkout.sessions.list({
+          payment_intent:paymentIntentId
+        })
+        const {purchaseId}=session.data[0].metadata
         const purchaseData = await Purchase.findById(purchaseId);
         console.log("📄 Purchase data from DB:", purchaseData);
 
@@ -89,11 +91,11 @@ export const stripeWebhooks = async (request, response) => {
         const userData = await User.findById(purchaseData.userId);
         console.log("👤 User data:", userData);
 
-        const courseData = await Course.findById(purchaseData.courseId);
+        const courseData = await Course.findById(purchaseData.courseId.toString());
         console.log("📚 Course data:", courseData);
 
         if (courseData && userData) {
-          courseData.enrolledStudents.push(userData._id);
+          courseData.enrolledStudents.push(userData);
           await courseData.save();
           console.log("✅ Course updated");
 
@@ -111,22 +113,22 @@ export const stripeWebhooks = async (request, response) => {
       case "payment_intent.payment_failed": {
         console.log("❌ Payment failed");
         const paymentIntent = event.data.object;
-        console.log("Payment Intent object:", paymentIntent);
+        const paymentIntentId=paymentIntent.id
 
         const sessionList = await stripeInstance.checkout.sessions.list({
-          payment_intent: paymentIntent.id,
+          payment_intent: paymentIntentId,
         });
         console.log("Session list:", sessionList.data);
 
-        const purchaseId = sessionList.data[0]?.metadata?.purchaseId;
+        const {purchaseId} = sessionList.data[0].metadata;
         console.log("🆔 Purchase ID from failed intent:", purchaseId);
 
         const purchaseData = await Purchase.findById(purchaseId);
-        if (purchaseData) {
+        
           purchaseData.status = "failed";
           await purchaseData.save();
           console.log("✅ Purchase status updated to failed");
-        }
+        
         break;
       }
 
