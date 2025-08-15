@@ -73,7 +73,7 @@ export const stripeWebhooks = async (request, response) => {
       case "payment_intent.succeeded": {
         console.log("💰 Checkout session completed triggered");
         const paymentIntent = event.data.object;
-        console.log("📦 Session object:", session);
+        
 
         const paymentIntentId = paymentIntent.id;
         const session=await stripeInstance.checkout.sessions.list({
