@@ -21,8 +21,13 @@ export const clerkWebHooks=async(req,res)=>{
                 name:data.first_name+" "+data.last_name,
                 imageUrl:data.image_url,
             }
-            await User.create(userData)
-            return res.json({})
+           try {
+    await User.create(userData);
+    console.log("✅ user created in DB");
+  } catch (err) {
+    console.log("❌ Mongo error:", err);
+  }
+  return res.status(200).json({ success: true });
             break;
         }
         case 'user.updated':{
