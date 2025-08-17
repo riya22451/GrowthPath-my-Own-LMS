@@ -11,10 +11,13 @@ export const clerkWebHooks=async(req,res)=>{
         "svix-timestamp":req.headers['svix-timestamp'],
         "svix-signature":req.headers['svix-signature']
     })
-    console.log('verified')
+  const body = JSON.parse(req.body.toString());
+
+console.log("✅ verified");
+console.log("type:", body.type);
+console.log("data:", body.data);
     const {data,type}=req.body
-    console.log(data)
-    console.log(type)
+    
     switch (type){
         case 'user.created':{
             const userData={
