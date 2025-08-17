@@ -16,46 +16,39 @@ export const clerkWebHooks=async(req,res)=>{
 console.log("✅ verified");
 console.log("type:", body.type);
 console.log("data:", body.data);
-    const {data,type}=req.body
-    
-    switch (type){
-        case 'user.created':{
-            const userData={
-                _id:data.id,
-                email:data.email_addresses[0].email_address,
-                name:data.first_name+" "+data.last_name,
-                imageUrl:data.image_url,
-            }
-           try {
-    await User.create(userData);
-    console.log("✅ user created in DB");
-  } catch (err) {
-    console.log("❌ Mongo error:", err);
-  }
-  return res.status(200).json({ success: true });
-            break;
-        }
-        case 'user.updated':{
-             const userData={
-                
-                email:data.email_addresses[0].email_address,
-                name:data.first_name+" "+data.last_name,
-                imageUrl:data.image_url,
-            }
-            await User.findByIdAndUpdate(data.id,userData)
-            return res.json({})
-            break;
-        } 
-        case 'user.deleted':{
-            await User.findByIdAndDelete(data.id)
-            return res.json({})
-            break;
-        }  
-           
-    
-        default:
-            break;
+   switch (body.type) {
+      case "user.created": {
+        const userData = {
+          _id: body.data.id,
+          email: body.data.email_addresses[0].email_address,
+          name: (body.data.first_name || "") + " " + (body.data.last_name || ""),
+          imageUrl: body.data.image_url,
+        };
+        await User.create(userData);
+        console.log("✅ user added to DB");
+        return res.status(200).json({ success: true });
+      }
+
+      case "user.updated": {
+        const userData = {
+          email: body.data.email_addresses[0].email_address,
+          name: (body.data.first_name || "") + " " + (body.data.last_name || ""),
+          imageUrl: body.data.image_url,
+        };
+        await User.findByIdAndUpdate(body.data.id, userData);
+        return res.status(200).json({ success: true });
+      }
+
+      case "user.deleted": {
+        await User.findByIdAndDelete(body.data.id);
+        return res.status(200).json({ success: true });
+      }
+
+      default:
+        return res.status(200).json({ received: true });
     }
+  
+    
   } catch (error) {
     console.log("❌ webhook error:", error); 
     res.json({success:false,message:error.message})
